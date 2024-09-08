@@ -13,5 +13,9 @@ func NewWebIpHandler() *WebIpHandler {
 }
 
 func (h *WebIpHandler) Get(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("GET /ip called")
+	clientIP := r.RemoteAddr
+
+	apiKey := r.Header.Get("API_KEY")
+
+	fmt.Printf("GET /ip called from IP: %s with API_KEY: %s\n", clientIP, apiKey)
 }

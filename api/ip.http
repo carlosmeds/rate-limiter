@@ -1,2 +1,3 @@
 GET http://localhost:8080/ip
 Host: localhost:8080
+API_KEY: your_api_key_value
