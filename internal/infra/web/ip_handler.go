@@ -1,8 +1,9 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/carlosmeds/rate-limiter/internal/usecase"
 )
 
 type WebIpHandler struct {
@@ -17,5 +18,9 @@ func (h *WebIpHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 	apiKey := r.Header.Get("API_KEY")
 
-	fmt.Printf("GET /ip called from IP: %s with API_KEY: %s\n", clientIP, apiKey)
+	uc := usecase.NewGetIpUseCase()
+	uc.Execute(&usecase.GetIpDTO{
+		ClientIP: clientIP,
+		ApiKey:   apiKey,
+	})
 }
