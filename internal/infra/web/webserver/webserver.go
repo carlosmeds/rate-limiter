@@ -3,9 +3,10 @@ package webserver
 import (
 	"net/http"
 
+	"github.com/carlosmeds/rate-limiter/internal/infra/database"
+	md "github.com/carlosmeds/rate-limiter/internal/infra/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	md "github.com/carlosmeds/rate-limiter/internal/infra/middleware"
 )
 
 type WebServer struct {
@@ -27,8 +28,11 @@ func (s *WebServer) AddHandler(path string, handler http.HandlerFunc) {
 }
 
 func (s *WebServer) Start() {
+	repo := database.NewRateLimiterRepository()
+	rl := md.NewRateLimiterMiddleware(repo)
+
 	s.Router.Use(middleware.Logger)
-	s.Router.Use(md.RateLimiterMiddleware)
+	s.Router.Use(rl.RateLimiter)
 	for path, handler := range s.Handlers {
 		s.Router.Handle(path, handler)
 	}
