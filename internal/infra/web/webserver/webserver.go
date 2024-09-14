@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	md "github.com/carlosmeds/rate-limiter/internal/infra/middleware"
 )
 
 type WebServer struct {
@@ -27,6 +28,7 @@ func (s *WebServer) AddHandler(path string, handler http.HandlerFunc) {
 
 func (s *WebServer) Start() {
 	s.Router.Use(middleware.Logger)
+	s.Router.Use(md.RateLimiterMiddleware)
 	for path, handler := range s.Handlers {
 		s.Router.Handle(path, handler)
 	}
