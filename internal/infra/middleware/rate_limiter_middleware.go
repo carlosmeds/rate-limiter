@@ -2,16 +2,14 @@ package middleware
 
 import (
 	"net/http"
-
-	"github.com/carlosmeds/rate-limiter/internal/infra/database"
 )
 
 type RateLimiterMiddleware struct {
-	repo *database.RateLimiterRepository
+	s RateLimiterStrategy
 }
 
-func NewRateLimiterMiddleware(repo *database.RateLimiterRepository) *RateLimiterMiddleware {
-	return &RateLimiterMiddleware{repo: repo}
+func NewRateLimiterMiddleware(strategy RateLimiterStrategy) *RateLimiterMiddleware {
+	return &RateLimiterMiddleware{s: strategy}
 }
 
 func (md *RateLimiterMiddleware) RateLimiter(next http.Handler) http.Handler {
@@ -20,7 +18,7 @@ func (md *RateLimiterMiddleware) RateLimiter(next http.Handler) http.Handler {
 		key := r.Header.Get("API_KEY")
 
 		limit := int64(3)
-		reached_limit, err := md.repo.HasReachedLimit(ctx, key, limit)
+		reached_limit, err := md.s.HasReachedLimit(ctx, key, limit)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return

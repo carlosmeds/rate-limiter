@@ -3,7 +3,6 @@ package webserver
 import (
 	"net/http"
 
-	"github.com/carlosmeds/rate-limiter/internal/infra/database"
 	md "github.com/carlosmeds/rate-limiter/internal/infra/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -28,8 +27,8 @@ func (s *WebServer) AddHandler(path string, handler http.HandlerFunc) {
 }
 
 func (s *WebServer) Start() {
-	repo := database.NewRateLimiterRepository()
-	rl := md.NewRateLimiterMiddleware(repo)
+	strategy := md.NewRateLimiterStrategy()
+	rl := md.NewRateLimiterMiddleware(strategy)
 
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(rl.RateLimiter)
