@@ -4,6 +4,10 @@ import (
 	"net/http"
 )
 
+const (
+	rate_limit_msg = "you have reached the maximum number of requests or actions allowed within a certain time frame"
+)
+
 type RateLimiterMiddleware struct {
 	s RateLimiterStrategy
 }
@@ -24,7 +28,7 @@ func (md *RateLimiterMiddleware) RateLimiter(next http.Handler) http.Handler {
 			return
 		}
 		if reached_limit {
-			http.Error(w, "TooManyRequests", http.StatusTooManyRequests)
+			http.Error(w, rate_limit_msg, http.StatusTooManyRequests)
 			return
 		}
 
