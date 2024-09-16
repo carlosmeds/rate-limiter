@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/carlosmeds/rate-limiter/configs"
 )
@@ -25,8 +24,7 @@ func (md *RateLimiterMiddleware) CheckRateLimit(r *http.Request) (errMsg string,
 		return errMsg, statusCode
 	}
 
-	limitKey := getLimitKey(apiKey)
-	limit, errMsg, statusCode := md.getLimit(ctx, limitKey)
+	limit, errMsg, statusCode := md.getLimit(apiKey)
 	if errMsg != "" {
 		return errMsg, statusCode
 	}
@@ -46,13 +44,6 @@ func (md *RateLimiterMiddleware) CheckRateLimit(r *http.Request) (errMsg string,
 
 func getCredentials(r *http.Request) (string, string) {
 	return r.Header.Get("API_KEY"), r.RemoteAddr
-}
-
-func getLimitKey(key string) string {
-	if key == "" {
-		return "limit@default"
-	}
-	return "limit@" + key
 }
 
 func getRequestsKey(key, clientIP string) string {
@@ -81,23 +72,16 @@ func (md *RateLimiterMiddleware) isBlackListed(ctx context.Context, key string) 
 	return "", 0
 }
 
-func (md *RateLimiterMiddleware) getLimit(ctx context.Context, limitKey string) (int64, string, int) {
-	if limitKey == "limit@default" {
+func (md *RateLimiterMiddleware) getLimit(apiKey string) (int64, string, int) {
+	if apiKey == "" {
 		return configs.GetConfig().DefaultLimit, "", 0
 	}
 
-	limitStr, err := md.s.Get(ctx, limitKey)
-	if err != nil {
-		return 0, internalErrMsg, http.StatusInternalServerError
-	}
-	if limitStr == "" {
+	limit, exists := configs.GetConfig().ApiKeyLimits[apiKey]
+	if !exists {
 		return 0, invalidKey, http.StatusUnauthorized
 	}
 
-	limit, err := strconv.ParseInt(limitStr, 10, 64)
-	if err != nil {
-		return 0, internalErrMsg, http.StatusInternalServerError
-	}
 	return limit, "", 0
 }
 

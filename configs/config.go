@@ -1,16 +1,19 @@
 package configs
 
 import (
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	DefaultLimit  int64 `mapstructure:"DEFAULT_LIMIT"`
+	DefaultLimit  int64  `mapstructure:"DEFAULT_LIMIT"`
 	SecretKey     string `mapstructure:"SECRET_KEY"`
 	WebServerPort string `mapstructure:"WEB_SERVER_PORT"`
-	BlockedTime   int64 `mapstructure:"BLOCKED_TIME"`
+	BlockedTime   int64  `mapstructure:"BLOCKED_TIME"`
+	ApiKeyLimits  map[string]int64
 }
 
 var (
@@ -33,6 +36,19 @@ func LoadConfig() (*Config, error) {
 		err = viper.Unmarshal(&config)
 		if err != nil {
 			panic(err)
+		}
+
+		config.ApiKeyLimits = make(map[string]int64)
+		apiKeys := viper.GetString("API_KEYS")
+		for _, pair := range strings.Split(apiKeys, ",") {
+			parts := strings.Split(pair, ":")
+			if len(parts) == 2 {
+				apiKey := parts[0]
+				limit, err := strconv.ParseInt(parts[1], 10, 64)
+				if err == nil {
+					config.ApiKeyLimits[apiKey] = limit
+				}
+			}
 		}
 	})
 	return config, err
