@@ -33,9 +33,9 @@ func (r *RateLimiterRepository) Get(ctx context.Context, key string) (string, er
 	return value, nil
 }
 
-func (r *RateLimiterRepository) Save(ctx context.Context, key string, value string) error {
+func (r *RateLimiterRepository) Save(ctx context.Context, key, value string, ttl int64) error {
 	fmt.Println("Saving", value, "for", key)
-	err := r.RedisClient.Set(ctx, key, value, 10*time.Second).Err()
+	err := r.RedisClient.Set(ctx, key, value, time.Duration(ttl)*time.Second).Err()
 	if err != nil {
 		return err
 	}
@@ -43,21 +43,21 @@ func (r *RateLimiterRepository) Save(ctx context.Context, key string, value stri
 }
 
 func (r *RateLimiterRepository) HasReachedLimit(ctx context.Context, apiKey string, limit int64) (bool, error) {
-    count, err := r.RedisClient.Incr(ctx, apiKey).Result()
-    if err != nil {
-        return false, err
-    }
+	count, err := r.RedisClient.Incr(ctx, apiKey).Result()
+	if err != nil {
+		return false, err
+	}
 
 	fmt.Println("Count", count)
-    if count == 1 {
-        err = r.RedisClient.Expire(ctx, apiKey, 1*time.Minute).Err()
-        if err != nil {
-            return true, err
-        }
-    }
+	if count == 1 {
+		err = r.RedisClient.Expire(ctx, apiKey, 1*time.Second).Err()
+		if err != nil {
+			return true, err
+		}
+	}
 
-    if count > limit {
-        return true, nil
-    }
-    return false, nil
+	if count > limit {
+		return true, nil
+	}
+	return false, nil
 }
