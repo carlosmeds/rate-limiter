@@ -13,6 +13,7 @@ type Config struct {
 	SecretKey     string `mapstructure:"SECRET_KEY"`
 	WebServerPort string `mapstructure:"WEB_SERVER_PORT"`
 	BlockedTime   int64  `mapstructure:"BLOCKED_TIME"`
+	RedisAddr     string `mapstructure:"REDIS_ADDR"`
 	ApiKeyLimits  map[string]int64
 }
 

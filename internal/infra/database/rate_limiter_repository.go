@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/carlosmeds/rate-limiter/configs"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -14,8 +15,13 @@ type RateLimiterRepository struct {
 }
 
 func NewRateLimiterRepository() *RateLimiterRepository {
+	redisAddr := configs.GetConfig().RedisAddr
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
+
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: redisAddr,
 	})
 	return &RateLimiterRepository{RedisClient: redisClient}
 }
