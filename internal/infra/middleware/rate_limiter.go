@@ -24,7 +24,8 @@ func (md *RateLimiterMiddleware) CheckRateLimit(r *http.Request) (errMsg string,
 		return errMsg, statusCode
 	}
 
-	limit, errMsg, statusCode := md.getLimit(apiKey)
+	config := configs.GetConfig()
+	limit, errMsg, statusCode := md.getLimit(apiKey, config)
 	if errMsg != "" {
 		return errMsg, statusCode
 	}
@@ -32,7 +33,7 @@ func (md *RateLimiterMiddleware) CheckRateLimit(r *http.Request) (errMsg string,
 	requestsKey := getRequestsKey(apiKey, clientIP)
 	errMsg, statusCode = md.getReachedLimit(ctx, requestsKey, limit)
 	if errMsg == rateLimitMsg {
-		md.AddToBlackList(ctx, blackListKey)
+		md.AddToBlackList(ctx, blackListKey, config)
 		return errMsg, statusCode
 	}
 	if errMsg != "" {
@@ -72,12 +73,12 @@ func (md *RateLimiterMiddleware) isBlackListed(ctx context.Context, key string) 
 	return "", 0
 }
 
-func (md *RateLimiterMiddleware) getLimit(apiKey string) (int64, string, int) {
+func (md *RateLimiterMiddleware) getLimit(apiKey string, config *configs.Config) (int64, string, int) {
 	if apiKey == "" {
-		return configs.GetConfig().DefaultLimit, "", 0
+		return config.DefaultLimit, "", 0
 	}
 
-	limit, exists := configs.GetConfig().ApiKeyLimits[apiKey]
+	limit, exists := config.ApiKeyLimits[apiKey]
 	if !exists {
 		return 0, invalidKey, http.StatusUnauthorized
 	}
@@ -96,10 +97,8 @@ func (md *RateLimiterMiddleware) getReachedLimit(ctx context.Context, key string
 	return "", 0
 }
 
-func (md *RateLimiterMiddleware) AddToBlackList(ctx context.Context, key string) error {
-	blockedTime := configs.GetConfig().BlockedTime
-
-	err := md.s.Save(ctx, key, "Too many requests", blockedTime)
+func (md *RateLimiterMiddleware) AddToBlackList(ctx context.Context, key string,  config *configs.Config) error {
+	err := md.s.Save(ctx, key, "Too many requests", config.BlockedTime)
 	if err != nil {
 		fmt.Println("Error adding to blacklist", err)
 		return err
