@@ -10,7 +10,6 @@ import (
 
 type Config struct {
 	DefaultLimit  int64  `mapstructure:"DEFAULT_LIMIT"`
-	SecretKey     string `mapstructure:"SECRET_KEY"`
 	WebServerPort string `mapstructure:"WEB_SERVER_PORT"`
 	BlockedTime   int64  `mapstructure:"BLOCKED_TIME"`
 	RedisAddr     string `mapstructure:"REDIS_ADDR"`
